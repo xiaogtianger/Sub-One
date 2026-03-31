@@ -61,32 +61,46 @@ export const useSessionStore = defineStore('session', () => {
      * - 如果失败，表示会话无效，设置为未登录状态
      * - 应用启动时会自动调用此方法
      */
+    /** 并发锁：确保同一时间只有一个检查在进行 */
+    let checkPromise: Promise<void> | null = null;
+
     async function checkSession() {
-        try {
-            // 首先检查系统是否需要初始化
-            const systemStatus = await checkSystemStatus();
+        if (checkPromise) return checkPromise;
 
-            if (systemStatus.needsSetup) {
-                // 系统需要初始化
-                sessionState.value = 'needsSetup';
-                return;
-            }
+        const performCheck = async () => {
+            try {
+                // 首先检查系统是否需要初始化
+                const systemStatus = await checkSystemStatus();
 
-            // 系统已初始化，尝试获取数据验证会话
-            const data = await fetchInitialData();
+                if (systemStatus.needsSetup) {
+                    // 系统需要初始化
+                    sessionState.value = 'needsSetup';
+                    return;
+                }
 
-            if (data) {
-                // 获取成功，保存数据并标记为已登录
-                initialData.value = data;
-                sessionState.value = 'loggedIn';
-            } else {
-                // 获取失败，标记为未登录
+                // 系统已初始化，尝试获取数据验证会话
+                const data = await fetchInitialData();
+
+                if (data) {
+                    // 获取成功，保存数据并标记为已登录
+                    initialData.value = data;
+                    sessionState.value = 'loggedIn';
+                } else {
+                    // 获取失败，标记为未登录
+                    sessionState.value = 'loggedOut';
+                }
+            } catch (error) {
+                // 发生错误，记录日志并标记为未登录
+                console.error('会话检查失败:', error);
                 sessionState.value = 'loggedOut';
             }
-        } catch (error) {
-            // 发生错误，记录日志并标记为未登录
-            console.error('会话检查失败:', error);
-            sessionState.value = 'loggedOut';
+        };
+
+        checkPromise = performCheck();
+        try {
+            await checkPromise;
+        } finally {
+            checkPromise = null;
         }
     }
 

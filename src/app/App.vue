@@ -10,12 +10,10 @@
  * ====================================================
  */
 import { onMounted } from 'vue';
-import { useSessionStore } from '@/stores/useSessionStore';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLayoutStore } from '@/stores/useLayoutStore';
 import Toast from '@/shared/ui/Toast.vue';
 
-const sessionStore = useSessionStore();
 const themeStore = useThemeStore();
 const layoutStore = useLayoutStore();
 
@@ -23,9 +21,6 @@ onMounted(async () => {
     // 1. 初始化主题和布局状态
     themeStore.initTheme();
     layoutStore.init();
-    
-    // 2. 首次加载时检查登录状态并尝试恢复会话
-    await sessionStore.checkSession();
 });
 </script>
 

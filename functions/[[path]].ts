@@ -23,7 +23,7 @@ export async function onRequest(context: EventContext<Env, any, any>) {
         return env.ASSETS.fetch(new Request(new URL('/', request.url)));
     }
 
-    if (!isStaticAsset && url.pathname !== '/' && !url.pathname.startsWith('/sub')) {
+    if (!isStaticAsset && url.pathname !== '/') {
         try {
             return await handleSubRequest(context);
         } catch (err: any) {
