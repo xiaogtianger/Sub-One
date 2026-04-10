@@ -40,7 +40,8 @@ const router = useRouter();
 
 // 优先使用 Store 中的状态
 const actualIsSetup = computed(() => {
-    const result = props.isSetup ?? sessionStore.sessionState === 'needsSetup';
+    // 只有当 props.isSetup 显式为 true 时才使用，否则使用 store 状态
+    const result = props.isSetup === true || sessionStore.sessionState === 'needsSetup';
     console.log('[LoginView] actualIsSetup:', result, 'sessionState:', sessionStore.sessionState, 'props.isSetup:', props.isSetup);
     return result;
 });
